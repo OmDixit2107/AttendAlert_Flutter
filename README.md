@@ -1,17 +1,2 @@
-# attendalert
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# AttendAlert_Flutter
+AttendAlert - Attendance Tracking App
+AttendAlert is a mobile application designed to simplify attendance tracking for students and faculty at IIIT Vadodara. The app allows users to log in using their institutional email addresses, view their enrolled courses, track attendance, and apply for leaves. It features distinct dashboards for students and administrators, ensuring tailored functionalities for both user roles.
