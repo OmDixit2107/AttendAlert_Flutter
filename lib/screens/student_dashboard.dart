@@ -1,3 +1,5 @@
+import 'package:attendalert/screens/auth.dart';
+import 'package:attendalert/screens/classes_screen.dart';
 import 'package:attendalert/screens/courses.dart';
 import 'package:attendalert/screens/profile.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +13,10 @@ class StudentDashboardScreen extends StatelessWidget {
     try {
       await FirebaseAuth.instance.signOut();
       // Navigate back to the login screen
-      Navigator.pushReplacementNamed(context, '/login'); // Adjust the route name as needed
-    } catch (e) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (ctx) => const Auth()));
+    } // Adjust the route name as needed
+    catch (e) {
       // Handle error (e.g., show a message)
       print('Error logging out: $e');
     }
@@ -41,7 +45,7 @@ class StudentDashboardScreen extends StatelessWidget {
               title: "Attendance",
               icon: Icons.check_circle_outline,
               onTap: () {
-                // Navigate to attendance screen or perform action
+                Navigator.push(context, MaterialPageRoute(builder: (ctx) => ClassesScreen()));
               },
             ),
             DashboardCard(

@@ -27,7 +27,7 @@ class _ProfileState extends State<Profile> {
         email = user!.email ?? 'No Email';
         batch=email.substring(0,4);
         //202351094
-        branch= email[5]==1?"CSE":"IT";
+        branch= email[5]=='1'?"CSE":"IT";
       });
     }
   }
@@ -35,6 +35,9 @@ class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Profile Screen"),
+      ),
       body: Stack(
         children: [
           Column(
