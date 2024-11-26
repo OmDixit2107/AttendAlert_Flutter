@@ -1,23 +1,52 @@
+import 'package:attendalert/screens/AttendanceScreen.dart';
 import 'package:attendalert/screens/auth.dart';
 import 'package:attendalert/screens/classes_screen.dart';
 import 'package:attendalert/screens/courses.dart';
 import 'package:attendalert/screens/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class StudentDashboardScreen extends StatelessWidget {
+import 'admin_dashboard.dart'; // Add Firebase Firestore import
+
+class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
+
+  @override
+  State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
+}
+
+class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
+  String? rollNo;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRollNo();
+  }
+
+  // Fetch the roll number from Firebase
+  Future<void> _fetchRollNo() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Assuming rollNo is stored as the first 9 characters of the email
+        final rollNo = user.email!.substring(0, 9);
+        setState(() {
+          this.rollNo = rollNo;
+        });
+      }
+    } catch (e) {
+      print("Error fetching roll number: $e");
+    }
+  }
 
   // Function to log out the user
   Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
-      // Navigate back to the login screen
-      Navigator.push(
-          context, MaterialPageRoute(builder: (ctx) => const Auth()));
-    } // Adjust the route name as needed
-    catch (e) {
-      // Handle error (e.g., show a message)
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Auth()));
+    } catch (e) {
       print('Error logging out: $e');
     }
   }
@@ -29,7 +58,7 @@ class StudentDashboardScreen extends StatelessWidget {
         title: const Text("Welcome Back"),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
             onPressed: () => _logout(context),
           ),
         ],
@@ -69,49 +98,23 @@ class StudentDashboardScreen extends StatelessWidget {
                 // Navigate to apply leaves screen or perform action
               },
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class DashboardCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const DashboardCard({
-    required this.title,
-    required this.icon,
-    required this.onTap,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        elevation: 4,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 48,
-              color: Colors.blue,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            DashboardCard(
+              title: "Attendance Statistics",
+              icon: Icons.bar_chart_outlined,
+              onTap: () {
+                if (rollNo != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (ctx) => AttendanceScreen(rollNo: rollNo!),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Roll number is not available.")),
+                  );
+                }
+              },
             ),
           ],
         ),
