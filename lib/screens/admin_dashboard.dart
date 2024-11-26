@@ -1,3 +1,4 @@
+import 'package:attendalert/screens/view_attendance.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:attendalert/screens/auth.dart';
@@ -40,7 +41,10 @@ class AdminDashboardScreen extends StatelessWidget {
               title: "View Attendance",
               icon: Icons.check_circle_outline,
               onTap: () {
-                // Navigate to view attendance screen or perform action
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ViewAttendanceScreen()),
+                );
               },
             ),
             DashboardCard(
