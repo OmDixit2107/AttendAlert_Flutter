@@ -2,6 +2,8 @@ import 'package:attendalert/screens/AttendanceScreen.dart';
 import 'package:attendalert/screens/auth.dart';
 import 'package:attendalert/screens/classes_screen.dart';
 import 'package:attendalert/screens/courses.dart';
+import 'package:attendalert/screens/leave_requests.dart';
+import 'package:attendalert/screens/leave_status.dart';
 import 'package:attendalert/screens/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -28,7 +30,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   // Fetch the roll number from Firebase
   Future<void> _fetchRollNo() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = FirebaseAuth.instance.currentUser;;
       if (user != null) {
         // Assuming rollNo is stored as the first 9 characters of the email
         final rollNo = user.email!.substring(0, 9);
@@ -51,8 +53,16 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }
   }
 
+  // final studentEmail = user.email!;
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.email == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Unable to fetch current user email.")),
+      );
+      return Container();
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text("Welcome Back"),
@@ -84,18 +94,25 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 Navigator.push(context, MaterialPageRoute(builder: (ctx) => CoursesScreen()));
               },
             ),
-            DashboardCard(
-              title: "View Profile",
-              icon: Icons.person_outline,
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (ctx) => Profile()));
-              },
-            ),
+            // DashboardCard(
+            //   title: "View Profile",
+            //   icon: Icons.person_outline,
+            //   onTap: () {
+            //     Navigator.push(context, MaterialPageRoute(builder: (ctx) => Profile()));
+            //   },
+            // ),
             DashboardCard(
               title: "Apply Leaves",
               icon: Icons.exit_to_app,
               onTap: () {
-                // Navigate to apply leaves screen or perform action
+                Navigator.push(context, MaterialPageRoute(builder: (ctx)=>LeaveRequestScreen()));
+              },
+            ),
+            DashboardCard(
+              title: " Leaves Status",
+              icon: Icons.access_alarm,
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (ctx)=>StudentLeaveStatus(studentEmail: user.email!)));
               },
             ),
             DashboardCard(

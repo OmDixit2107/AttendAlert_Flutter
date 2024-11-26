@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ViewAttendanceScreen extends StatefulWidget {
   @override
@@ -25,7 +26,16 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
   String? _selectedSubject;
   Map<String, List<Map<String, dynamic>>> _attendanceRecords = {};
   bool _isLoading = false;
-
+  String _formatDate(String? date) {
+    if (date == null) return "Invalid date";
+    try {
+      final DateTime parsedDate = DateTime.parse(date);
+      return DateFormat('MMM dd, yyyy').format(parsedDate);
+    } catch (e) {
+      print("Date parsing error: $e");
+      return "Invalid date";
+    }
+  }
   Future<void> _fetchSubjectsAndAttendance(String rollNo) async {
     try {
       setState(() {
@@ -131,13 +141,19 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
               },
             ),
           if (_selectedSubject != null)
+
             Expanded(
+
               child: ListView(
                 children: (_attendanceRecords[_selectedSubject] ?? [])
-                    .map((record) => ListTile(
-                  title: Text("Date: ${record['date']}"),
+                      .map((record) {
+                  final String formattedDate = _formatDate(record['date']);
+                        return ListTile(
+
+                  title: Text("Date: ${formattedDate}"),
                   subtitle: Text("Status: ${record['status']}"),
-                ))
+                );
+                      })
                     .toList(),
               ),
             ),

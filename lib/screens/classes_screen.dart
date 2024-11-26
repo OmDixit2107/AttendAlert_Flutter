@@ -36,7 +36,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
       'Sunday',
     ];
     final now = DateTime.now();
-    _currentDay = days[now.weekday ]; // `weekday` returns 1 for Monday, etc.
+    _currentDay = days[now.weekday -1]; // `weekday` returns 1 for Monday, etc.
     setState(() {}); // Update UI to reflect the current day
   }
 
