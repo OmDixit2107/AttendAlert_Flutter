@@ -1,0 +1,282 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+core/network/dio_client.dart
+features/auth/data/datasources/auth_remote_datasource_impl.dart
+features/auth/data/datasources/auth_remote_datasource.dart
+features/auth/data/models/user_model.dart
+features/auth/data/repositories_impl/auth_repository_impl.dart
+features/auth/domain/entities/user.dart
+features/auth/domain/repositories/auth_repository.dart
+features/auth/domain/usecases/login_usecase.dart
+features/auth/domain/usecases/signup_usecase.dart
+main.dart
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="core/network/dio_client.dart">
+import 'package:dio/dio.dart';
+
+class DioClient {
+  // In Dart, a final variable must be initialized before the constructor body executes
+  final Dio dio;
+
+  // When you instantiate a class in Dart (e.g., final myObj = MyClass();),
+  //  Dart goes through three distinct phases in this exact order:
+
+  // Memory Allocation: Dart grabs a chunk of memory for your new object.
+  //  At this exact millisecond, all variables are "empty" (null).
+
+  // The Initializer List: Dart runs the initializer list (the code between the : and the {).
+  //  This is where variables get their first, official values.
+  //  3. The Constructor Body: Finally, Dart runs the code inside the curly braces
+  DioClient()
+    : dio = Dio(
+        BaseOptions(
+          baseUrl: "dummy.com",
+          headers: {'Content-Type': 'application/json'},
+        ),
+      ) {
+    //interceptors come here
+  }
+}
+</file>
+
+<file path="features/auth/data/datasources/auth_remote_datasource_impl.dart">
+import 'package:attendalert/core/network/dio_client.dart';
+import 'package:attendalert/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:attendalert/features/auth/data/models/user_model.dart';
+
+class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
+  final DioClient dioClient;
+  // Any time a function returns a Future,
+  // you must use await if you want to crack open that Future and use the actual data inside it.
+  AuthRemoteDataSourceImpl(this.dioClient);
+  @override
+  Future<UserModel> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await dioClient.dio.post(
+      "Dummy-url",
+      data: {"email": email, "password": password},
+    );
+    return UserModel.fromJson(response.data);
+  }
+
+  @override
+  Future<UserModel> signup({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    final response = await dioClient.dio.post("dummy-url");
+    return UserModel.fromJson(response.data);
+  }
+}
+</file>
+
+<file path="features/auth/data/datasources/auth_remote_datasource.dart">
+import 'package:attendalert/features/auth/data/models/user_model.dart';
+
+abstract class AuthRemoteDataSource {
+  Future<UserModel> login({required String email, required String password});
+  Future<UserModel> signup({
+    required String email,
+    required String password,
+    required String name,
+  });
+}
+</file>
+
+<file path="features/auth/data/models/user_model.dart">
+import 'package:attendalert/features/auth/domain/entities/user.dart';
+
+class UserModel {
+  final int id;
+  final String name;
+  final String email;
+
+  //positional constructor u need to knw the sequence
+  //named constructor that is not the case
+  const UserModel({required this.id, required this.name, required this.email});
+  //factory constructor object create nahi karta directly
+  // Wo sirf return karta hai kisi aur constructor ka result
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(id: json['id'], name: json['name'], email: json['email']);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'name': name, 'email': email};
+  }
+
+  User toEntity() {
+    return User(id: id, name: name, email: email);
+  }
+}
+</file>
+
+<file path="features/auth/data/repositories_impl/auth_repository_impl.dart">
+import 'package:attendalert/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:attendalert/features/auth/data/models/user_model.dart';
+import 'package:attendalert/features/auth/domain/entities/user.dart';
+import 'package:attendalert/features/auth/domain/repositories/auth_repository.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
+  final AuthRemoteDataSource authRemoteDataSource;
+  const AuthRepositoryImpl({required this.authRemoteDataSource});
+  @override
+  Future<User> login({required String email, required String password}) async {
+    final userModel = await authRemoteDataSource.login(
+      email: email,
+      password: password,
+    );
+    return userModel.toEntity();
+  }
+
+  @override
+  Future<User> signup({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    final userModel = await authRemoteDataSource.signup(
+      email: email,
+      password: password,
+      name: name,
+    );
+    return userModel.toEntity();
+  }
+}
+</file>
+
+<file path="features/auth/domain/entities/user.dart">
+class User {
+  final int id;
+  final String name;
+  final String email;
+
+  //positional constructor u need to knw the sequence
+  //named constructor that is not the case
+  const User({required this.id, required this.name, required this.email});
+
+  //const constructors
+
+  // {}-->named parameters
+  User copyWith({int? id, String? name, String? email}) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+    );
+  }
+}
+</file>
+
+<file path="features/auth/domain/repositories/auth_repository.dart">
+import 'package:attendalert/features/auth/domain/entities/user.dart';
+
+abstract class AuthRepository {
+  Future<User> login({required String email, required String password});
+  Future<User> signup({
+    required String name,
+    required String email,
+    required String password,
+  });
+}
+</file>
+
+<file path="features/auth/domain/usecases/login_usecase.dart">
+import 'package:attendalert/features/auth/domain/entities/user.dart';
+import 'package:attendalert/features/auth/domain/repositories/auth_repository.dart';
+
+class LoginUseCase {
+  final AuthRepository authRepository;
+  LoginUseCase({required this.authRepository});
+  Future<User> call({required String email, required String password}) {
+    return authRepository.login(email: email, password: password);
+  }
+}
+</file>
+
+<file path="features/auth/domain/usecases/signup_usecase.dart">
+import 'package:attendalert/features/auth/domain/entities/user.dart';
+import 'package:attendalert/features/auth/domain/repositories/auth_repository.dart';
+
+class SignupUseCase {
+  final AuthRepository authRepository;
+  SignupUseCase({required this.authRepository});
+  Future<User> call({
+    required String email,
+    required String password,
+    required String name,
+  }) {
+    return authRepository.signup(name: name, email: email, password: password);
+  }
+}
+</file>
+
+<file path="main.dart">
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+</file>
+
+</files>

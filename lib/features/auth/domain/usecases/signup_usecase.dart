@@ -9,6 +9,6 @@ class SignupUseCase {
     required String password,
     required String name,
   }) {
-    return authRepository.signup(name: name, email: email, password: password)
+    return authRepository.signup(name: name, email: email, password: password);
   }
 }
