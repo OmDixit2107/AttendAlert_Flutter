@@ -1,6 +1,10 @@
+import 'package:attendalert/core/di/injection_container.dart';
 import 'package:flutter/material.dart';
 
 void main() {
+  //perform asynchronous operations before calling runApp()
+  WidgetsFlutterBinding.ensureInitialized();
+  configureDependicies();
   runApp(MyApp());
 }
 

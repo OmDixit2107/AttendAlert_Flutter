@@ -40,6 +40,7 @@ The content is organized as follows:
 </file_summary>
 
 <directory_structure>
+core/di/injection_container.dart
 core/network/dio_client.dart
 features/auth/data/datasources/auth_remote_datasource_impl.dart
 features/auth/data/datasources/auth_remote_datasource.dart
@@ -49,11 +50,50 @@ features/auth/domain/entities/user.dart
 features/auth/domain/repositories/auth_repository.dart
 features/auth/domain/usecases/login_usecase.dart
 features/auth/domain/usecases/signup_usecase.dart
+features/auth/presentation/bloc/auth_bloc.dart
+features/auth/presentation/bloc/auth_event.dart
+features/auth/presentation/bloc/auth_state.dart
 main.dart
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="core/di/injection_container.dart">
+import 'package:attendalert/core/network/dio_client.dart';
+import 'package:attendalert/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:attendalert/features/auth/data/datasources/auth_remote_datasource_impl.dart';
+import 'package:attendalert/features/auth/data/repositories_impl/auth_repository_impl.dart';
+import 'package:attendalert/features/auth/domain/repositories/auth_repository.dart';
+import 'package:attendalert/features/auth/domain/usecases/login_usecase.dart';
+import 'package:attendalert/features/auth/domain/usecases/signup_usecase.dart';
+import 'package:get_it/get_it.dart';
+
+//service locator
+final sl = GetIt.instance;
+
+void configureDependicies() {
+  //core
+  sl.registerLazySingleton<DioClient>(() => DioClient());
+
+  //datasources
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(sl()),
+  );
+
+  // 3. REPOSITORIES
+  // ---------------------------------------------------------------------------
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(authRemoteDataSource: sl()),
+  );
+
+  // ---------------------------------------------------------------------------
+  // 4. USE CASES (DOMAIN)
+  // ---------------------------------------------------------------------------
+  sl.registerLazySingleton(() => LoginUseCase(authRepository: sl()));
+  sl.registerLazySingleton(() => SignupUseCase(authRepository: sl()));
+}
+</file>
 
 <file path="core/network/dio_client.dart">
 import 'package:dio/dio.dart';
@@ -87,6 +127,7 @@ class DioClient {
 import 'package:attendalert/core/network/dio_client.dart';
 import 'package:attendalert/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:attendalert/features/auth/data/models/user_model.dart';
+import 'package:dio/dio.dart';
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final DioClient dioClient;
@@ -98,11 +139,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    final response = await dioClient.dio.post(
-      "Dummy-url",
-      data: {"email": email, "password": password},
-    );
-    return UserModel.fromJson(response.data);
+    try {
+      final response = await dioClient.dio.post(
+        "Dummy-url",
+        data: {"email": email, "password": password},
+      );
+      return UserModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception("Error occured : ${e.message}");
+    }
   }
 
   @override
@@ -254,6 +299,123 @@ class SignupUseCase {
   }) {
     return authRepository.signup(name: name, email: email, password: password);
   }
+}
+</file>
+
+<file path="features/auth/presentation/bloc/auth_bloc.dart">
+import 'package:attendalert/features/auth/domain/usecases/login_usecase.dart';
+import 'package:attendalert/features/auth/domain/usecases/signup_usecase.dart';
+import 'package:attendalert/features/auth/presentation/bloc/auth_event.dart';
+import 'package:attendalert/features/auth/presentation/bloc/auth_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  final LoginUseCase loginUseCase;
+  final SignupUseCase signupUseCase;
+  AuthBloc({required this.loginUseCase, required this.signupUseCase})
+    : super(AuthInitial()) {
+    on<LoginRequestedEvent>(_onLoginRequestedEvent);
+    on<SignupRequestedEvent>(_onSignupRequestedEvent);
+  }
+
+  Future<void> _onLoginRequestedEvent(
+    LoginRequestedEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await loginUseCase.call(
+        email: event.email,
+        password: event.password,
+      );
+
+      emit(AuthSuccess(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onSignupRequestedEvent(
+    SignupRequestedEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await signupUseCase.call(
+        email: event.email,
+        password: event.password,
+        name: event.name,
+      );
+      emit(AuthSuccess(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+}
+</file>
+
+<file path="features/auth/presentation/bloc/auth_event.dart">
+import 'package:equatable/equatable.dart';
+
+abstract class AuthEvent extends Equatable {
+  const AuthEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+// UI se Login ka request aayega with email and password
+class LoginRequestedEvent extends AuthEvent {
+  final String email;
+  final String password;
+
+  const LoginRequestedEvent({required this.email, required this.password});
+
+  @override
+  List<Object> get props => [email, password];
+}
+
+// UI se Signup ka request aayega with name, email, and password
+class SignupRequestedEvent extends AuthEvent {
+  final String name;
+  final String email;
+  final String password;
+
+  const SignupRequestedEvent({
+    required this.name,
+    required this.email,
+    required this.password,
+  });
+
+  @override
+  List<Object> get props => [name, email, password];
+}
+</file>
+
+<file path="features/auth/presentation/bloc/auth_state.dart">
+import 'package:attendalert/features/auth/domain/entities/user.dart';
+import 'package:equatable/equatable.dart';
+
+class AuthState extends Equatable {
+  const AuthState();
+  @override
+  // TODO: implement props
+  List<Object?> get props => [];
+}
+
+class AuthInitial extends AuthState {}
+
+class AuthLoading extends AuthState {}
+
+class AuthSuccess extends AuthState {
+  final User user;
+  const AuthSuccess({required this.user});
+}
+
+class AuthError extends AuthState {
+  final String message;
+
+  const AuthError({required this.message});
 }
 </file>
 
